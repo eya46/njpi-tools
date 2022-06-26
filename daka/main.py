@@ -4,7 +4,7 @@ from typing import Union, Optional
 import httpx
 from lxml.etree import HTML
 
-url_main = "https://某个网址/"
+url_main = "https://xgyyx.njpi.edu.cn/"
 
 url_index = url_main + "student/index"
 
@@ -19,7 +19,6 @@ url_send_token = url_main + "student/wap/menu/student/temp/zzdk/_child_/edit"
 time_out = httpx.Timeout(4.0)
 
 headers = {
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, "
                   "like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 }
@@ -51,7 +50,7 @@ async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool
         _res = await r.post(
             url_login,
             headers=headers,
-            data={
+            params={
                 'uname': account,
                 'pd_mm': md5(password)
             },
@@ -198,7 +197,7 @@ async def post_daka(r: httpx.AsyncClient, form: dict) -> str:
         _res = await r.post(
             url_send_daka,
             headers=headers,
-            data=form,
+            params=form,
             timeout=time_out
         )
         # print(_res.text)
