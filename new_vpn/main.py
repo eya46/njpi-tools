@@ -14,7 +14,7 @@ def url_to_proxy(url: str) -> str:
     _ = urlparse(url)
     _url = "http://{0}{1}{2}.atrust.njpi.edu.cn:443{3}{4}".format(
         _.hostname.replace(".", "-"),
-        (f"{_.port}-p" if _.port else ""),
+        (f"-{_.port}-p" if _.port else ""),
         ("-s" if _.scheme == "https" else ""),
         (_.path if _.path else "/"),
         (f"?{_.query}" if _.query else "")
