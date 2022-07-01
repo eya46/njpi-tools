@@ -119,7 +119,7 @@ async def get_location(address: str) -> Optional[str]:
         return None
 
 
-def build_form(data: dict) -> Optional[dict]:
+def build_form(data: dict) -> Union[dict, str]:
     def _build(key: str) -> str:
         if key.startswith("!"):
             try:
@@ -135,61 +135,67 @@ def build_form(data: dict) -> Optional[dict]:
     xgym_true_dm = "2" if data.get("xgym", "2") is None else data.get("xgym", "2")
     
     try:
-        _temp = {'dkdz': "!dkdz",
-                 'dkdzZb': "!dkdzZb",
-                 'dkly': 'baidu',
-                 'dkd': "!dkd",
-                 'zzdk_token': "!zzdk_token",
-                 'jzdValue': f'{data["jzdSheng"]["dm"]},{data["jzdShi"]["dm"]},{data["jzdXian"]["dm"]}',
-                 'jzdSheng.dm': '!jzdSheng.dm',
-                 'jzdShi.dm': '!jzdShi.dm',
-                 'jzdXian.dm': '!jzdXian.dm',
-                 'jzdDz': '!jzdDz',
-                 'jzdDz2': '!jzdDz2',
-                 'lxdh': '!lxdh',
-                 'sfzx': '!sfzx',
-                 'sfzx1': '不在校' if data.get("sfzx") != "1" else "在校",
-                 'twM.dm': '!twM.dm',
-                 'tw1': '!twM.mc',
-                 'tw1M.dm': "",
-                 'tw11': "",
-                 'tw2M.dm': "",
-                 'tw12': "",
-                 'tw3M.dm': "",
-                 'tw13': "",
-                 'yczk.dm': '!yczk.dm',
-                 'yczk1': '!yczk.mc',
-                 'fbrq': '!fbrq',
-                 'jzInd': '!jzInd',
-                 'jzYy': '!jzYy',
-                 'zdjg': '!zdjg',
-                 'fxrq': '!fxrq',
-                 'brStzk.dm': '!brStzk.dm',
-                 'brStzk1': '!brStzk.mc',
-                 'brJccry.dm': '!brJccry.dm',
-                 'brJccry1': '!brJccry.mc',
-                 'jrStzk.dm': '!jrStzk.dm',
-                 'jrStzk1': '!jrStzk.mc',
-                 'jrJccry.dm': '!jrJccry.dm',
-                 'jrJccry1': '!jrJccry.mc',
-                 'jkm': "!jkm",
-                 'jkm1': '',
-                 'xcm': '!xcm',
-                 'xcm1': "",
-                 'xgym': '!xgym',
-                 'xgym1': xgym_dm[xgym_true_dm],
-                 'hsjc': '!hsjc',
-                 'hsjc1': '',
-                 'bz': '!bz',
-                 'operationType': 'Create',
-                 'dm': ''}
+        _temp = {
+            'dkdz': "!dkdz",
+            'dkdzZb': "!dkdzZb",
+            'dkly': 'baidu',
+            'dkd': "!dkd",
+            'zzdk_token': "!zzdk_token",
+            'jzdValue': "".join([
+                data["jzdSheng"].get("dm", ""),
+                data["jzdShi"].get("dm", ""),
+                data["jzdXian"].get("dm", "")
+            ]),
+            'jzdSheng.dm': '!jzdSheng.dm',
+            'jzdShi.dm': '!jzdShi.dm',
+            'jzdXian.dm': '!jzdXian.dm',
+            'jzdDz': '!jzdDz',
+            'jzdDz2': '!jzdDz2',
+            'lxdh': '!lxdh',
+            'sfzx': '!sfzx',
+            'sfzx1': '不在校' if data.get("sfzx") != "1" else "在校",
+            'twM.dm': '!twM.dm',
+            'tw1': '!twM.mc',
+            'tw1M.dm': "",
+            'tw11': "",
+            'tw2M.dm': "",
+            'tw12': "",
+            'tw3M.dm': "",
+            'tw13': "",
+            'yczk.dm': '!yczk.dm',
+            'yczk1': '!yczk.mc',
+            'fbrq': '!fbrq',
+            'jzInd': '!jzInd',
+            'jzYy': '!jzYy',
+            'zdjg': '!zdjg',
+            'fxrq': '!fxrq',
+            'brStzk.dm': '!brStzk.dm',
+            'brStzk1': '!brStzk.mc',
+            'brJccry.dm': '!brJccry.dm',
+            'brJccry1': '!brJccry.mc',
+            'jrStzk.dm': '!jrStzk.dm',
+            'jrStzk1': '!jrStzk.mc',
+            'jrJccry.dm': '!jrJccry.dm',
+            'jrJccry1': '!jrJccry.mc',
+            'jkm': "!jkm",
+            'jkm1': '',
+            'xcm': '!xcm',
+            'xcm1': "",
+            'xgym': '!xgym',
+            'xgym1': xgym_dm[xgym_true_dm],
+            'hsjc': '!hsjc',
+            'hsjc1': '',
+            'bz': '!bz',
+            'operationType': 'Create',
+            'dm': ''
+        }
         
         for i in _temp:
             _temp[i] = _build(_temp[i])
         
         return _temp
     except Exception as e:
-        return None
+        return str(e)
 
 
 async def post_daka(r: httpx.AsyncClient, form: dict) -> str:
@@ -234,6 +240,10 @@ async def daka(account: str, password: str) -> str:
             return "打卡失败 -> 获取上次打卡信息超时"
         
         form = build_form(the_last_info)
+        
+        if isinstance(form, str):
+            return f"打卡失败 -> 表单构建错误:{form}"
+        
         form["zzdk_token"] = await get_token(r)
         # 获取打卡token
         if form["zzdk_token"] is None:
