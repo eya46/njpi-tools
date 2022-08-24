@@ -31,6 +31,14 @@ xgym_dm = {
     '4': '未接种加强针',
 }
 
+color = {
+    "": "",
+    "0": "",
+    "1": "绿色",
+    "2": "黄色",
+    "3": "红色"
+}
+
 
 def md5(passwd: str) -> str:
     temp = hashlib.md5()
@@ -177,10 +185,10 @@ def build_form(data: dict) -> Union[dict, str]:
             'jrStzk1': '!jrStzk.mc',
             'jrJccry.dm': '!jrJccry.dm',
             'jrJccry1': '!jrJccry.mc',
-            'jkm': "!jkm",
-            'jkm1': '',
-            'xcm': '!xcm',
-            'xcm1': "",
+            'jkm': data.get("jkm") or "1",
+            'jkm1': color[data.get("jkm") or "1"],
+            'xcm': data.get("xcm") or "1",
+            'xcm1': color[data.get("xcm") or "1"],
             'xgym': '!xgym',
             'xgym1': xgym_dm[xgym_true_dm],
             'hsjc': '!hsjc',
