@@ -49,7 +49,7 @@ def md5(passwd: str) -> str:
 
 async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool, str]:
     try:
-        await r.get(
+        _index = await r.get(
             url_index,
             headers=headers,
             timeout=time_out
@@ -65,7 +65,10 @@ async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool
             timeout=time_out
         )
         
-        __data = _res.json()
+        try:
+            __data = _res.json()
+        except:
+            return f"登录结果解析失败，codes=[{_index.status_code},{_res.status_code}]"
         
         if __data.get("goto2") is not None:
             return True
@@ -76,6 +79,8 @@ async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool
                 return _res
     except (httpx.ReadTimeout, httpx.ConnectTimeout):
         return False
+    except Exception as e:
+        return f"登录失败，{e}"
 
 
 # True登录成功，False超时，str:登录失败:原因
