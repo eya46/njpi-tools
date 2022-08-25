@@ -47,7 +47,7 @@ def md5(passwd: str) -> str:
     return temp[:5] + 'a' + temp[5:9] + 'b' + temp[9:-2]
 
 
-async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool, str]:
+async def login(r: httpx.AsyncClient, account: str, password: str, to_md5: bool = True) -> Union[bool, str]:
     try:
         _index = await r.get(
             url_index,
@@ -60,7 +60,7 @@ async def login(r: httpx.AsyncClient, account: str, password: str) -> Union[bool
             headers=headers,
             params={
                 'uname': account,
-                'pd_mm': md5(password)
+                'pd_mm': md5(password) if to_md5 else password
             },
             timeout=time_out
         )
