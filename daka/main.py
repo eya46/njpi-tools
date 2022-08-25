@@ -84,10 +84,10 @@ async def login(r: httpx.AsyncClient, account: str, password: str, to_md5: bool 
 
 
 # True登录成功，False超时，str:登录失败:原因
-async def login_now(account: str, password: str, *args) -> Union[bool, str]:
+async def login_now(account: str, password: str, *args, **kwargs) -> Union[bool, str]:
     r = httpx.AsyncClient()
     try:
-        return await login(r, account, password, *args)
+        return await login(r, account, password, *args, **kwargs)
     except (httpx.ReadTimeout, httpx.ConnectTimeout):
         return False
     finally:
@@ -238,10 +238,10 @@ async def post_daka(r: httpx.AsyncClient, form: dict) -> str:
         return "打卡失败 -> 提交打卡出现未知错误"
 
 
-async def daka(account: str, password: str, *args) -> str:
+async def daka(account: str, password: str, *args, **kwargs) -> str:
     r = httpx.AsyncClient()
     try:
-        login_res = await login(r, account, password, *args)
+        login_res = await login(r, account, password, *args, **kwargs)
         if isinstance(login_res, str):
             return f"打卡失败 -> {login_res}"
         if isinstance(login_res, bool) and not login_res:
