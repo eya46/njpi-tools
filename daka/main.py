@@ -39,6 +39,12 @@ color = {
     "3": "红色"
 }
 
+hsjc = {
+    "": "",
+    "0": "否",
+    "1": "是"
+}
+
 
 def md5(passwd: str) -> str:
     temp = hashlib.md5()
@@ -197,7 +203,7 @@ def build_form(data: dict) -> Union[dict, str]:
             'xgym': '!xgym',
             'xgym1': xgym_dm[xgym_true_dm],
             'hsjc': '!hsjc',
-            'hsjc1': '',
+            'hsjc1': hsjc[data.get("hsjc") or "1"],
             'bz': '!bz',
             'operationType': 'Create',
             'dm': ''
