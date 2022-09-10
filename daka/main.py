@@ -100,7 +100,7 @@ async def login_now(account: str, password: str, *args, **kwargs) -> Union[bool,
         await r.aclose()
 
 
-async def last_info(r: httpx.AsyncClient):
+async def last_info(r: httpx.AsyncClient) -> Union[bool, dict]:
     try:
         _res = await r.get(
             url_last_info, headers=headers,
@@ -154,17 +154,19 @@ def build_form(data: dict) -> Union[dict, str]:
     xgym_true_dm = "2" if data.get("xgym", "2") is None else data.get("xgym", "2")
     
     try:
+        try:
+            _jzdValue = data["jzdSheng"]["dm"] + (
+                "," + _d if (_d := (data.get("jzdShi") or {}).get("dm", None)) else "") + (
+                            "," + _d if (_d := (data.get("jzdXian") or {}).get("dm", None)) else "")
+        except:
+            return "省份获取失败"
         _temp = {
             'dkdz': "!dkdz",
             'dkdzZb': "!dkdzZb",
             'dkly': 'baidu',
             'dkd': "!dkd",
             'zzdk_token': "!zzdk_token",
-            'jzdValue': "".join([
-                data["jzdSheng"].get("dm", ""),
-                data["jzdShi"].get("dm", ""),
-                data["jzdXian"].get("dm", "")
-            ]),
+            'jzdValue': _jzdValue,
             'jzdSheng.dm': '!jzdSheng.dm',
             'jzdShi.dm': '!jzdShi.dm',
             'jzdXian.dm': '!jzdXian.dm',
@@ -222,17 +224,16 @@ async def post_daka(r: httpx.AsyncClient, form: dict) -> str:
         _res = await r.post(
             url_send_daka,
             headers=headers,
-            params=form,
+            data=form,
             timeout=time_out
         )
-        # print(_res.text)
+        
         if "重复提交" in _res.text:
             return "打卡失败 -> 今日已打卡"
         elif "非法请求" in _res.text:
             return "打卡失败 -> 提交参数不足或有误"
         elif "message" in _res.text:
             __temp = "打卡失败 -> 预料之外的错误，错误如下:\n"
-            # print(_res.text)
             for i in _res.json()['errorInfoList']:
                 __temp += f"{i['message']}\n"
             return __temp[:-1]
