@@ -128,9 +128,11 @@ async def get_token(r: httpx.AsyncClient) -> Optional[str]:
 async def get_location(address: str) -> Optional[str]:
     try:
         async with httpx.AsyncClient() as r:
+            # 原免费接口容易出错，自行前往百度地图申请[ak]
+            # https://lbsyun.baidu.com/apiconsole/key#/home
             resp = await r.get(
-                "http://api.map.baidu.com/geocoder",
-                params={"address": address, "output": "json"}
+                "http://api.map.baidu.com/geocoding/v3/",
+                params={"address": address, "output": "json", "ak": "********************************"}
             )
             _data = resp.json()["result"]["location"]
             return f"{_data['lng']},{_data['lat']}"
