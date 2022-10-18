@@ -1,5 +1,5 @@
 import hashlib
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 import httpx
 from lxml.etree import HTML
@@ -11,6 +11,10 @@ url_index = url_main + "student/index"
 url_login = url_main + "student/website/login"
 
 url_last_info = url_main + "student/content/student/temp/zzdk/lastone"
+
+url_last_dm = url_main + "student/content/tabledata/student/temp/zzdk"
+
+url_last_info_by_dm = url_main + "student/content/student/temp/zzdk/"
 
 url_send_daka = url_main + "student/content/student/temp/zzdk"
 
@@ -60,7 +64,7 @@ async def login(r: httpx.AsyncClient, account: str, password: str, to_md5: bool 
             headers=headers,
             timeout=time_out
         )
-        
+
         _res = await r.post(
             url_login,
             headers=headers,
@@ -70,12 +74,12 @@ async def login(r: httpx.AsyncClient, account: str, password: str, to_md5: bool 
             },
             timeout=time_out
         )
-        
+
         try:
             __data = _res.json()
         except:
             return f"登录结果解析失败，codes=[{_index.status_code},{_res.status_code}]"
-        
+
         if __data.get("goto2") is not None:
             return True
         else:
@@ -100,6 +104,40 @@ async def login_now(account: str, password: str, *args, **kwargs) -> Union[bool,
         await r.aclose()
 
 
+async def get_last_dm(r: httpx.AsyncClient, length=1) -> Tuple[bool, str]:
+    try:
+        res = await r.get(url_last_dm, params={
+            "bSortable_0": False,
+            "bSortable_1": True,
+            "iSortingCols": "1",
+            "iDisplayStart": "0",
+            "iDisplayLength": str(length),
+            "iSortCol_0": "1",
+            "sSortDir_0": "desc"
+        }, headers=headers, timeout=time_out)
+        data = res.json()
+        if data.get("iTotalRecords", 0) == 0 or len(data.get("aaData", [])) == 0:
+            return False, "该用户从未打过卡"
+        return True, data["aaData"][0]["DM"]
+    except (httpx.ReadTimeout, httpx.ConnectTimeout):
+        return False, "获取上次打卡代码超时"
+    except IndexError:
+        return False, "索引上次打卡代码失败"
+    except Exception as e:
+        return False, "获取上次打卡代码失败"
+
+
+async def get_last_info_by_dm(r: httpx.AsyncClient, dm: str) -> Tuple[bool, Union[str, dict]]:
+    try:
+        res = await r.get(url_last_info_by_dm + dm, headers=headers, timeout=time_out)
+        return True, res.json()
+
+    except (httpx.ReadTimeout, httpx.ConnectTimeout):
+        return False, "获取上次打卡信息超时"
+    except Exception as e:
+        return False, "获取上次打卡信息失败"
+
+
 async def last_info(r: httpx.AsyncClient) -> Union[bool, dict]:
     try:
         _res = await r.get(
@@ -108,6 +146,8 @@ async def last_info(r: httpx.AsyncClient) -> Union[bool, dict]:
         )
         return _res.json()
     except (httpx.ReadTimeout, httpx.ConnectTimeout):
+        return False
+    except:
         return False
 
 
@@ -152,9 +192,9 @@ def build_form(data: dict) -> Union[dict, str]:
                 return ""
         else:
             return key
-    
+
     xgym_true_dm = "2" if data.get("xgym", "2") is None else data.get("xgym", "2")
-    
+
     try:
         try:
             _jzdValue = data["jzdSheng"]["dm"] + (
@@ -212,10 +252,10 @@ def build_form(data: dict) -> Union[dict, str]:
             'operationType': 'Create',
             'dm': ''
         }
-        
+
         for i in _temp:
             _temp[i] = _build(_temp[i])
-        
+
         return _temp
     except Exception as e:
         return str(e)
@@ -229,7 +269,7 @@ async def post_daka(r: httpx.AsyncClient, form: dict) -> str:
             data=form,
             timeout=time_out
         )
-        
+
         if "重复提交" in _res.text:
             return "打卡失败 -> 今日已打卡"
         elif "非法请求" in _res.text:
@@ -255,24 +295,29 @@ async def daka(account: str, password: str, *args, **kwargs) -> str:
             return f"打卡失败 -> {login_res}"
         if isinstance(login_res, bool) and not login_res:
             return f"打卡失败 -> 打卡网站超时"
-        
-        the_last_info = await last_info(r)
-        
-        if isinstance(the_last_info, bool):
-            return "打卡失败 -> 获取上次打卡信息超时"
-        
+
+        success, the_last_info_dm = await get_last_dm(r)
+
+        if not success:
+            return f"打卡失败 -> {the_last_info_dm}"
+
+        success, the_last_info = await get_last_info_by_dm(r, the_last_info_dm)
+
+        if not success:
+            return f"打卡失败 -> {the_last_info}"
+
         form = build_form(the_last_info)
-        
+
         if isinstance(form, str):
             return f"打卡失败 -> 表单构建错误:{form}"
-        
+
         form["zzdk_token"] = await get_token(r)
         # 获取打卡token
         if form["zzdk_token"] is None:
             return "打卡失败 -> 获取打卡token失败"
         if not form:
             return "打卡失败 -> 构建打卡信息失败"
-        
+
         if (dkdz := form.get("dkdz")) is None:
             return "打卡失败 -> 打卡地获取失败"
         else:
@@ -280,7 +325,7 @@ async def daka(account: str, password: str, *args, **kwargs) -> str:
             if _dkdzZb is None:
                 return "打卡失败 -> 经纬度获取失败"
             form["dkdzZb"] = _dkdzZb
-        
+
         return await post_daka(r, form)
     except (httpx.ReadTimeout, httpx.ConnectTimeout):
         return "打卡失败 -> 打卡网站超时"
@@ -294,7 +339,7 @@ async def daka(account: str, password: str, *args, **kwargs) -> str:
 
 if __name__ == '__main__':
     import asyncio
-    
+
     print(asyncio.run(
         daka("2xxxxxxxxx", "abcdefg")
     ))
