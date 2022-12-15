@@ -257,7 +257,7 @@ def build_form(data: dict) -> Union[dict, str]:
         except:
             return "省份获取失败"
         _temp = {
-            'dkdz': "!dkdz",
+            'dkdz': "!dkd",
             'dkdzZb': "!dkdzZb",
             'dkly': 'baidu',
             'dkd': "!dkd",
