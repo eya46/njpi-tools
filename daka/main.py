@@ -1,12 +1,22 @@
 import hashlib
+import base64
+import random
 from typing import Union, Optional, Tuple
+from io import BytesIO
 
 import httpx
+
 from lxml.etree import HTML
+from PIL import Image, ImageFile
+from PIL.PngImagePlugin import PngImageFile
 
 url_main = "https://xgyyx.njpi.edu.cn/"
 
 url_index = url_main + "student/index"
+
+url_img = url_main + "student/website/verify/image"
+
+url_img_result = url_img + "/result"
 
 url_login = url_main + "student/website/login"
 
@@ -57,12 +67,56 @@ def md5(passwd: str) -> str:
     return temp[:5] + 'a' + temp[5:9] + 'b' + temp[9:-2]
 
 
+def b64_to_img(data: str) -> ImageFile:
+    return Image.open(BytesIO(base64.b64decode(data)))
+
+
+def check_rgb(img: ImageFile, x_start: int = 0, y_start: int = 0, rgb=(192, 192, 192)) -> Tuple[int, int]:
+    assert isinstance(img, PngImageFile), "只支持png格式"
+    gap_1, gap_2 = (0, 0)
+    for y in range(y_start, img.size[1]):
+        for x in range(x_start, img.size[0]):
+            if img.getpixel((x, y)) == rgb:
+                if not gap_1:
+                    gap_1 = x
+                else:
+                    gap_2 = x
+        if gap_1 and gap_2:
+            break
+    return gap_1, gap_2
+
+
+def deal_img(data: httpx.Response) -> dict:
+    _data = data.json()
+    img = b64_to_img(_data["SrcImage"])
+    x1, x2 = check_rgb(img, y_start=_data["YPosition"] + 10)
+    salt = random.randint(-3, 3)
+    move_x = x1 - (x2 - x1) / 2 + salt + random.random()
+    return {
+        "moveEnd_X": str(move_x),
+        "wbili": "0.9333333333333333"
+    }
+
+
 async def login(r: httpx.AsyncClient, account: str, password: str, to_md5: bool = True) -> Union[bool, str]:
     try:
         _index = await r.get(
             url_index,
             headers=headers,
             timeout=time_out
+        )
+
+        _img_data = await r.get(
+            url_img,
+            headers=headers,
+            timeout=time_out
+        )
+
+        _img_check = await r.post(
+            url_img_result,
+            headers={"X-Requested-With": "XMLHttpRequest", **headers},
+            timeout=time_out,
+            data=deal_img(_img_data)
         )
 
         _res = await r.post(
@@ -341,5 +395,5 @@ if __name__ == '__main__':
     import asyncio
 
     print(asyncio.run(
-        daka("2xxxxxxxxx", "abcdefg")
+        login_now("2xxxxxxxxx", "abcdefg")
     ))
