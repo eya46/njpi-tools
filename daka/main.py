@@ -37,28 +37,6 @@ headers = {
                   "like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1"
 }
 
-xgym_dm = {
-    '0': '未接种',
-    '1': '已接种未完成',
-    '2': '已接种已完成',
-    '3': '已接种加强针',
-    '4': '未接种加强针',
-}
-
-color = {
-    "": "",
-    "0": "",
-    "1": "绿色",
-    "2": "黄色",
-    "3": "红色"
-}
-
-hsjc = {
-    "": "",
-    "0": "否",
-    "1": "是"
-}
-
 
 def md5(passwd: str) -> str:
     temp = hashlib.md5()
@@ -247,7 +225,7 @@ def build_form(data: dict) -> Union[dict, str]:
         else:
             return key
 
-    xgym_true_dm = "2" if data.get("xgym", "2") is None else data.get("xgym", "2")
+    # xgym_true_dm = "2" if data.get("xgym", "2") is None else data.get("xgym", "2")
 
     try:
         try:
@@ -260,8 +238,9 @@ def build_form(data: dict) -> Union[dict, str]:
             'dkdz': data.get("dkd", "") + data.get("jzdDz", ""),
             'dkdzZb': "!dkdzZb",
             'dkly': 'baidu',
-            'dkd': "!dkd",
+            'xcmTjd': '',
             'zzdk_token': "!zzdk_token",
+            'dkd': "!dkd",
             'jzdValue': _jzdValue,
             'jzdSheng.dm': '!jzdSheng.dm',
             'jzdShi.dm': '!jzdShi.dm',
@@ -270,41 +249,33 @@ def build_form(data: dict) -> Union[dict, str]:
             'jzdDz2': '!jzdDz2',
             'lxdh': '!lxdh',
             'sfzx': '!sfzx',
-            'sfzx1': '不在校' if data.get("sfzx") != "1" else "在校",
+            'sfzxText': '不在校' if data.get("sfzx") != "1" else "在校",
             'twM.dm': '!twM.dm',
-            'tw1': '!twM.mc',
-            'tw1M.dm': "",
-            'tw11': "",
-            'tw2M.dm': "",
-            'tw12': "",
-            'tw3M.dm': "",
-            'tw13': "",
+            'twMText': '!twM.mc',
             'yczk.dm': '!yczk.dm',
-            'yczk1': '!yczk.mc',
-            'fbrq': '!fbrq',
-            'jzInd': '!jzInd',
-            'jzYy': '!jzYy',
-            'zdjg': '!zdjg',
-            'fxrq': '!fxrq',
-            'brStzk.dm': '!brStzk.dm',
-            'brStzk1': '!brStzk.mc',
-            'brJccry.dm': '!brJccry.dm',
-            'brJccry1': '!brJccry.mc',
-            'jrStzk.dm': '!jrStzk.dm',
-            'jrStzk1': '!jrStzk.mc',
-            'jrJccry.dm': '!jrJccry.dm',
-            'jrJccry1': '!jrJccry.mc',
-            'jkm': data.get("jkm") or "1",
-            'jkm1': color[data.get("jkm") or "1"],
-            'xcm': data.get("xcm") or "1",
-            'xcm1': color[data.get("xcm") or "1"],
+            'yczkText': '!yczk.mc',
             'xgym': '!xgym',
-            'xgym1': xgym_dm[xgym_true_dm],
-            'hsjc': '!hsjc',
-            'hsjc1': hsjc[data.get("hsjc") or "1"],
+            'xgymText': '已接种已完成',
             'bz': '!bz',
             'operationType': 'Create',
-            'dm': ''
+            'dm': '',
+            'tw1M.dm': '',
+            'tw2M.dm': '',
+            'tw3M.dm': '',
+            'brStzk.dm': '!brStzk.dm',
+            'brJccry.dm': '!brJccry.dm',
+            'jrStzk.dm': '!jrStzk.dm',
+            'jrJccry.dm': '!jrJccry.dm',
+            'jkm': data.get("jkm") or "1",
+            'xcm': data.get("xcm") or "1",
+            'hsjc': '!hsjc',
+            'jkmcl': '',
+            'zdy1': '!zdy1',
+            'zdy2': '!zdy2',
+            'zdy3': '!zdy3',
+            'zdy4': '!zdy4',
+            'zdy5': '!zdy5',
+            'zdy6': '!zdy6'
         }
 
         for i in _temp:
