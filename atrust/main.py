@@ -11,7 +11,7 @@ from playwright.async_api import Browser, Playwright, async_playwright, Page, Br
 
 def url_to_proxy(url: str) -> str:
     _ = urlparse(url)
-    return "http://{0}{1}{2}.atrust.njpi.edu.cn:443{3}{4}".format(
+    return "https://{0}{1}{2}.atrust.njpi.edu.cn{3}{4}".format(
         _.hostname.replace(".", "-"),
         (f"-{_.port}-p" if _.port else ""),
         ("-s" if _.scheme == "https" else ""),
